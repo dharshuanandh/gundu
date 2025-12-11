@@ -1,0 +1,6 @@
+﻿fastapi==0.95.2
+uvicorn[standard]==0.22.0
+numpy==1.26.4
+opencv-python==4.9.0.76
+Pillow==10.1.0
+python-multipart==0.0.6

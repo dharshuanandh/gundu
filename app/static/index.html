@@ -1,0 +1,67 @@
+﻿<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Missing Person Finder</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;margin:20px}
+      .box{margin-bottom:20px}
+      img{max-width:160px;max-height:160px;margin:5px}
+    </style>
+  </head>
+  <body>
+    <h1>Missing Person Finder</h1>
+
+    <div class="box">
+      <h3>Index images (upload multiple event images)</h3>
+      <input id="indexFiles" type="file" multiple accept="image/*" />
+      <button id="indexBtn">Upload & Index</button>
+      <div id="indexResult"></div>
+    </div>
+
+    <div class="box">
+      <h3>Search (upload missing-person image)</h3>
+      <input id="probeFile" type="file" accept="image/*" />
+      <label>Top K: <input id="topk" type="number" value="5" min="1" max="20" style="width:60px"/></label>
+      <button id="searchBtn">Search</button>
+      <div id="searchResult"></div>
+    </div>
+
+    <script>
+      document.getElementById('indexBtn').onclick = async () => {
+        const files = document.getElementById('indexFiles').files;
+        if (!files.length) return alert('Choose files to index');
+        const fd = new FormData();
+        for (let f of files) fd.append('files', f);
+        const res = await fetch('/api/index', {method:'POST', body:fd});
+        const j = await res.json();
+        document.getElementById('indexResult').innerText = Saved files: , Faces indexed: ;
+      };
+
+      document.getElementById('searchBtn').onclick = async () => {
+        const f = document.getElementById('probeFile').files[0];
+        if (!f) return alert('Select probe image');
+        const topk = document.getElementById('topk').value || 5;
+        const fd = new FormData();
+        fd.append('file', f);
+        fd.append('top_k', topk);
+        const res = await fetch('/api/search', {method:'POST', body:fd});
+        if (!res.ok) {
+          const t = await res.json();
+          return alert('Search error: ' + (t.detail||JSON.stringify(t)));
+        }
+        const j = await res.json();
+        const el = document.getElementById('searchResult');
+        el.innerHTML = '';
+        if (!j.results.length) { el.innerText = 'No matches found'; return; }
+        for (let r of j.results) {
+          const d = document.createElement('div');
+          const img = document.createElement('img'); img.src = r.url;
+          const p = document.createElement('div'); p.innerText = Distance:  \n ;
+          d.appendChild(img); d.appendChild(p);
+          el.appendChild(d);
+        }
+      };
+    </script>
+  </body>
+</html>
